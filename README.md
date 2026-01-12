@@ -2,15 +2,24 @@
 
 A Docker image pre-configured with **Syft** and **Trivy** for generating Software Bill of Materials (SBOMs) and vulnerability reports.
 
+**📦 Published to Docker Hub:** [`r3zafa/syft-trivy-sbom:latest`](https://hub.docker.com/r/r3zafa/syft-trivy-sbom)
+
 ## Overview
 
 This project provides a containerized environment with:
-- **Syft**: Generate SBOMs in multiple formats (JSON, SPDX, CycloneDX)
-- **Trivy**: Scan images for vulnerabilities and generate SBOMs
+- **Syft v1.24.1**: Generate SBOMs in multiple formats (JSON, SPDX, CycloneDX)
+- **Trivy v0.53.0**: Scan images for vulnerabilities and generate SBOMs
+- **Base Image**: Ubuntu 22.04 LTS
 
 ## Quick Start
 
-### Build the Image
+### Option 1: Use Published Image (Recommended)
+
+```bash
+docker pull r3zafa/syft-trivy-sbom:latest
+```
+
+### Option 2: Build the Image Locally
 
 ```bash
 chmod +x build.sh

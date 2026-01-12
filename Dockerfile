@@ -1,12 +1,12 @@
 # Dockerfile for Syft and Trivy SBOM generation
 # Optimized for Azure DevOps template integration
 # Used with: templates/jobs/sbom-generate.yml
-FROM ubuntu:24.04@sha256:3dd7e7cd940c05a4f628d9a8c9ec1b7e7cc8aadc5a74e0c6e7e0e8f9e6f5d8c4
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install dependencies and upgrade gnupg2 to fix CVE
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     wget \

@@ -1,7 +1,7 @@
 # Dockerfile for Syft and Trivy SBOM generation
 # Optimized for Azure DevOps template integration
 # Used with: templates/jobs/sbom-generate.yml
-FROM ubuntu:latest
+FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 

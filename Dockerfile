@@ -26,9 +26,8 @@ RUN SYFT_VERSION=1.40.0 && \
     rm -f /tmp/syft.tar.gz && \
     chmod +x /usr/local/bin/syft
 
-# Install Trivy (latest with patched Go dependencies) - using direct download with verification
-RUN TRIVY_VERSION=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep -oP '"tag_name": "v\K[^"]+' || echo "0.53.0") && \
-    curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz -o /tmp/trivy.tar.gz && \
+# Install Trivy (latest with patched dependencies) - using direct download with verification
+RUN curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.51.4/trivy_0.51.4_Linux-64bit.tar.gz -o /tmp/trivy.tar.gz && \
     cd /tmp && tar -xzf trivy.tar.gz trivy && \
     mv trivy /usr/local/bin/ && \
     rm -f /tmp/trivy.tar.gz && \

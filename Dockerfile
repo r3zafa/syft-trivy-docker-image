@@ -1,38 +1,35 @@
-# Multi-stage Dockerfile for Syft and Trivy SBOM generation
-FROM alpine:3.18 as base
+# Dockerfile for Syft and Trivy SBOM generation
+# Optimized for Azure DevOps template integration
+# Used with: templates/jobs/sbom-generate.yml
+FROM ubuntu:22.04
 
-# Set working directory
-WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required dependencies
-RUN apk add --no-cache \
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     curl \
     wget \
     git \
-    ca-certificates \
-    tar \
-    gzip \
-    bash
+    jq \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Syft
+# Install Syft (v1.24.1 as per templates)
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-# Install Trivy
-RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add - 2>/dev/null || \
-    curl -sSfL https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add - 2>/dev/null || \
-    (curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.48.0/trivy_0.48.0_Linux-64bit.tar.gz | \
-    tar -xzf - -C /usr/local/bin/)
+# Install Trivy (v0.53.0 as per templates)
+RUN wget -q https://github.com/aquasecurity/trivy/releases/download/v0.53.0/trivy_0.53.0_Linux-64bit.tar.gz && \
+    tar -xzf trivy_0.53.0_Linux-64bit.tar.gz -C /usr/local/bin/ && \
+    rm trivy_0.53.0_Linux-64bit.tar.gz
 
-# Alternative: Direct installation from GitHub releases
-RUN wget -q https://github.com/aquasecurity/trivy/releases/download/v0.48.0/trivy_0.48.0_Linux-64bit.tar.gz && \
-    tar -xzf trivy_0.48.0_Linux-64bit.tar.gz -C /usr/local/bin/ && \
-    rm trivy_0.48.0_Linux-64bit.tar.gz
+# Create working directories
+RUN mkdir -p /sbom-output /project
+
+# Set working directory
+WORKDIR /project
 
 # Verify installations
 RUN syft --version && trivy --version
-
-# Create output directory for SBOMs
-RUN mkdir -p /sbom-output
 
 # Default command
 CMD ["/bin/bash"]

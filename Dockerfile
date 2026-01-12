@@ -1,25 +1,24 @@
 # Dockerfile for Syft and Trivy SBOM generation
 # Optimized for Azure DevOps template integration
 # Used with: templates/jobs/sbom-generate.yml
-FROM ubuntu:24.04
+FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies and upgrade gnupg2 to fix CVE-2024 (requires 2.4.4-2ubuntu17.4+)
-RUN apt-get update && \
-    apt-get install -y --only-upgrade gnupg gnupg2 gpg gpgv && \
-    apt-get install -y --no-install-recommends \
+# Install dependencies and security updates
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     wget \
     git \
     jq \
+    gnupg \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create non-root user
 RUN useradd -m -s /bin/bash sbom
 
-# Install Syft (v1.40.0 as per templates) - using direct download with verification
+# Install Syft (v1.40.0) - using direct download with verification
 RUN SYFT_VERSION=1.40.0 && \
     curl -sSfL https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz -o /tmp/syft.tar.gz && \
     cd /tmp && tar -xzf syft.tar.gz syft && \
@@ -27,8 +26,8 @@ RUN SYFT_VERSION=1.40.0 && \
     rm -f /tmp/syft.tar.gz && \
     chmod +x /usr/local/bin/syft
 
-# Install Trivy (v0.53.0 as per templates) - using direct download with verification
-RUN TRIVY_VERSION=0.53.0 && \
+# Install Trivy (latest with patched Go dependencies) - using direct download with verification
+RUN TRIVY_VERSION=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep -oP '"tag_name": "v\K[^"]+' || echo "0.53.0") && \
     curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz -o /tmp/trivy.tar.gz && \
     cd /tmp && tar -xzf trivy.tar.gz trivy && \
     mv trivy /usr/local/bin/ && \

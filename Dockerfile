@@ -26,7 +26,8 @@ RUN SYFT_VERSION=1.40.0 && \
     rm -f /tmp/syft.tar.gz && \
     chmod +x /usr/local/bin/syft
 
-# Install Trivy (v0.68.2 - compiled with Go 1.25, fixes stdlib CVEs) - using direct download with verification
+# Install Trivy (v0.68.2 - latest available) - using direct download with verification
+# Note: Contains CVE-2025-66564 in sigstore/timestamp-authority (awaiting Trivy v0.69.0+ for fix)
 RUN curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_Linux-64bit.tar.gz -o /tmp/trivy.tar.gz && \
     cd /tmp && tar -xzf trivy.tar.gz trivy && \
     mv trivy /usr/local/bin/ && \

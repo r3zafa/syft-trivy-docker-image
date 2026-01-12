@@ -5,14 +5,15 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies and upgrade gnupg2 to fix CVE
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+# Install dependencies and upgrade gnupg2 to fix CVE-2024 (requires 2.4.4-2ubuntu17.4+)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade gnupg gnupg2 gpg gpgv && \
+    apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     wget \
     git \
     jq \
-    gnupg \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create non-root user

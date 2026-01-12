@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  sbom-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: syft-trivy-sbom-${PROJECT_NAME:-default}
+    volumes:
+      - ${PROJECT_PATH:-./}:/project
+      - ${OUTPUT_DIR:-./sbom-output}:/sbom-output
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /project
+    stdin_open: true
+    tty: true
+    environment:
+      - PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+      - PROJECT_NAME=${PROJECT_NAME:-default}
+      - PROJECT_PATH=${PROJECT_PATH:-.}
+      - OUTPUT_DIR=${OUTPUT_DIR:-./sbom-output}

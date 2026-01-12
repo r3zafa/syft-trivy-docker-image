@@ -1,0 +1,7 @@
+sbom-output/
+sample-images/
+*.log
+.DS_Store
+__pycache__/
+.venv/
+venv/

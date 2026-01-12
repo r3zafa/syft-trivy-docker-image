@@ -86,6 +86,77 @@ docker run -v $(pwd)/project:/project r3zafa/syft-trivy-sbom:latest \
   syft /project
 ```
 
+**Generate multiple formats in one run:**
+```bash
+docker run -v $(pwd)/project:/project -v $(pwd)/sbom-output:/sbom-output \
+  r3zafa/syft-trivy-sbom:latest sh -c \
+  "syft /project -o spdx > /sbom-output/sbom.spdx.json && \
+   syft /project -o cyclonedx > /sbom-output/sbom.cyclonedx.json && \
+   trivy fs /project --format json > /sbom-output/trivy-report.json"
+```
+
+**Scan only critical/high severity vulnerabilities:**
+```bash
+docker run r3zafa/syft-trivy-sbom:latest \
+  trivy image --severity CRITICAL,HIGH --format json ubuntu:latest
+```
+
+**Extract specific package information:**
+```bash
+docker run r3zafa/syft-trivy-sbom:latest \
+  syft python:3.11 -o json | jq '.artifacts[] | {name, version, language}'
+```
+
+**Scan filesystem (local directory):**
+```bash
+docker run -v $(pwd):/scan r3zafa/syft-trivy-sbom:latest \
+  trivy fs /scan --format table
+```
+
+**Generate report with timestamp:**
+```bash
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+docker run -v $(pwd)/sbom-output:/sbom-output \
+  r3zafa/syft-trivy-sbom:latest \
+  syft nginx:latest -o spdx > sbom-output/sbom-$TIMESTAMP.json
+```
+
+**Interactive shell for manual exploration:**
+```bash
+docker run -it r3zafa/syft-trivy-sbom:latest bash
+# Then run: syft nginx:latest -o json
+# Or: trivy image python:3.11
+```
+
+**Batch scan multiple images:**
+```bash
+for img in alpine:latest ubuntu:22.04 node:20 python:3.11; do
+  docker run -v $(pwd)/sbom-output:/sbom-output \
+    r3zafa/syft-trivy-sbom:latest \
+    syft "$img" -o spdx > sbom-output/${img//:/-}-sbom.json
+done
+```
+
+### 🔧 Command Reference
+
+**SYFT Options:**
+```
+syft [target] -o [format]
+  Formats: json, spdx, cyclonedx, text, table
+  Targets: docker images, directories, files, registries
+```
+
+**TRIVY Options:**
+```
+trivy image [image] [options]
+  --severity CRITICAL,HIGH,MEDIUM,LOW
+  --format json|table|cyclonedx|sarif
+  --skip-update (faster, uses cached DB)
+  --exit-code 1 (fail on found vulnerabilities)
+trivy fs [path] (scan filesystem/directory)
+trivy config [path] (scan IaC files)
+```
+
 ### 🔗 Integration
 
 **Docker Compose:**
@@ -100,18 +171,81 @@ services:
     command: syft /project -o spdx-json
 ```
 
+**Kubernetes Job:**
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sbom-scan
+spec:
+  template:
+    spec:
+      containers:
+      - name: sbom
+        image: r3zafa/syft-trivy-sbom:latest
+        command: ["syft", "/project", "-o", "spdx"]
+        volumeMounts:
+        - name: project
+          mountPath: /project
+      volumes:
+      - name: project
+        configMap:
+          name: source-code
+      restartPolicy: Never
+```
+
+**GitHub Actions:**
+```yaml
+- name: Scan with Syft & Trivy
+  run: |
+    docker run -v $(pwd):/project \
+      r3zafa/syft-trivy-sbom:latest \
+      sh -c "syft /project -o spdx > sbom.json && \
+             trivy fs /project --format json > vulnerabilities.json"
+
+- uses: actions/upload-artifact@v3
+  with:
+    name: sbom-reports
+    path: |
+      sbom.json
+      vulnerabilities.json
+```
+
+**GitLab CI:**
+```yaml
+sbom:
+  image: r3zafa/syft-trivy-sbom:latest
+  script:
+    - syft . -o spdx > sbom.json
+    - trivy fs . --format json > vulnerabilities.json
+  artifacts:
+    paths:
+      - sbom.json
+      - vulnerabilities.json
+    expire_in: 30 days
+```
+
 **Azure DevOps Pipeline:**
 ```yaml
 - task: Docker@2
   inputs:
-    command: 'pull'
-    repository: 'r3zafa/syft-trivy-sbom'
-    tags: 'latest'
+    command: 'run'
+    arguments: '-v $(Build.SourcesDirectory):/project -v $(Build.ArtifactStagingDirectory):/sbom-output r3zafa/syft-trivy-sbom:latest syft /project -o spdx'
 
-- script: |
-    docker run -v $(Build.SourcesDirectory):/project \
-      r3zafa/syft-trivy-sbom:latest \
-      syft /project -o spdx-json
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'sbom-reports'
+```
+
+### 📋 Environment Variables
+
+When using with docker-compose or scripts:
+```env
+PROJECT_NAME=my-project
+PROJECT_PATH=/path/to/project
+OUTPUT_DIR=./sbom-output
+TARGET_IMAGE=nginx:latest
 ```
 
 ### 📚 Documentation

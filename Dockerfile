@@ -1,9 +1,10 @@
 # Dockerfile for Syft and Trivy SBOM generation
 # Optimized for Azure DevOps template integration
 # Used with: templates/jobs/sbom-generate.yml
-FROM alpine:edge
+FROM alpine:3.21
 
-# Install dependencies
+# Install dependencies including gcompat for glibc compatibility
+# gcompat allows Azure DevOps agent's Node.js binaries (compiled for glibc) to run on Alpine
 RUN apk add --no-cache \
     ca-certificates \
     curl \
@@ -12,7 +13,9 @@ RUN apk add --no-cache \
     jq \
     gnupg \
     bash \
-    shadow
+    shadow \
+    gcompat \
+    libstdc++
 
 # Create non-root user
 RUN useradd -m -s /bin/bash sbom

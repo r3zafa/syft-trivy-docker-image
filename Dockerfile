@@ -1,19 +1,18 @@
 # Dockerfile for Syft and Trivy SBOM generation
 # Optimized for Azure DevOps template integration
 # Used with: templates/jobs/sbom-generate.yml
-FROM ubuntu:26.04
+FROM alpine:edge
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install dependencies and security updates
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+# Install dependencies
+RUN apk add --no-cache \
     ca-certificates \
     curl \
     wget \
     git \
     jq \
     gnupg \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    bash \
+    shadow
 
 # Create non-root user
 RUN useradd -m -s /bin/bash sbom
@@ -26,8 +25,11 @@ RUN SYFT_VERSION=1.40.0 && \
     rm -f /tmp/syft.tar.gz && \
     chmod +x /usr/local/bin/syft
 
-# Install Trivy (v0.68.2 - latest available) - using direct download with verification
-# Note: Contains CVE-2025-66564 in sigstore/timestamp-authority (awaiting Trivy v0.69.0+ for fix)
+# Install Trivy (v0.68.2 - latest available as of Jan 2026)
+# Known CVEs in upstream Go dependencies (awaiting fix in Trivy v0.69.0+):
+#   - CVE-2025-66564 (7.5 High): github.com/sigstore/timestamp-authority v1.2.2
+#   - CVE-2026-22703 (5.5 Medium): github.com/sigstore/cosign/v2 v2.2.4
+# These are compiled into Trivy binary - no fix available until upstream updates
 RUN curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_Linux-64bit.tar.gz -o /tmp/trivy.tar.gz && \
     cd /tmp && tar -xzf trivy.tar.gz trivy && \
     mv trivy /usr/local/bin/ && \
@@ -41,11 +43,12 @@ RUN mkdir -p /sbom-output /project && \
 # Set working directory
 WORKDIR /project
 
-# Switch to non-root user
-USER sbom
-
-# Verify installations
+# Verify installations (run as root during build)
 RUN syft --version && trivy --version
+
+# NOTE: Do not set USER here - Azure DevOps container jobs require root access
+# during container initialization to create the pipeline user.
+# Azure DevOps will handle user switching appropriately.
 
 # Default command
 CMD ["/bin/bash"]

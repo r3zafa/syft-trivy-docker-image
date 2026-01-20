@@ -37,19 +37,30 @@ RUN curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.68.2/t
     rm -f /tmp/trivy.tar.gz && \
     chmod +x /usr/local/bin/trivy
 
-# Create working directories with proper permissions
-RUN mkdir -p /sbom-output /project && \
-    chown -R sbom:sbom /sbom-output /project
+
+# Copy utility scripts into the image and set permissions
+COPY scripts /usr/local/bin/scripts
+RUN chmod +x /usr/local/bin/scripts/*.sh \
+    && mkdir -p /sbom-output /project \
+    && chown -R sbom:sbom /sbom-output /project
+
+
+
+# Add scripts directory to PATH for easy access in Azure Pipelines
+ENV PATH="/usr/local/bin/scripts:$PATH"
 
 # Set working directory
 WORKDIR /project
 
+
 # Verify installations (run as root during build)
 RUN syft --version && trivy --version
+
 
 # NOTE: Do not set USER here - Azure DevOps container jobs require root access
 # during container initialization to create the pipeline user.
 # Azure DevOps will handle user switching appropriately.
+
 
 # Default command
 CMD ["/bin/bash"]

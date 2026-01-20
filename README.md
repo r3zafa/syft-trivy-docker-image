@@ -1,3 +1,53 @@
+# Utility Scripts
+
+# Utility Scripts
+
+**Note:** Utility scripts are only available in version 1.1.0 and later.
+
+**Important:** All scripts assume the working directory structure (e.g., `out/sbom/`) exists or is created by `prepare_output_dirs.sh`. Always run `prepare_output_dirs.sh` before any other script to avoid errors.
+
+The following utility scripts are included in the Docker image and are available at `/usr/local/bin/scripts`:
+
+* `deduplicate_sbom.sh`
+* `fail_on_findings.sh`
+* `generate_sboms.sh`
+* `prepare_output_dirs.sh`
+* `scan_sbom.sh`
+* `verify_tools.sh`
+
+## How to Use the Scripts
+
+
+## Usage in Azure Pipelines
+
+The scripts directory (`/usr/local/bin/scripts`) is added to the `PATH` in the image, so you can call any script directly by name in your Azure Pipeline YAML or container shell:
+
+```sh
+generate_sboms.sh
+prepare_output_dirs.sh
+scan_sbom.sh
+deduplicate_sbom.sh
+verify_tools.sh
+fail_on_findings.sh
+```
+
+For example, in an Azure Pipeline step:
+
+```yaml
+- script: |
+    prepare_output_dirs.sh
+    generate_sboms.sh
+    scan_sbom.sh
+  displayName: 'Generate and scan SBOM'
+```
+
+You can also run the scripts directly if you enter the container shell:
+
+```sh
+generate_sboms.sh
+```
+
+Each script is self-contained and can be executed as needed. Refer to the script source or comments for specific usage details and required arguments.
 # Syft & Trivy Docker SBOM Generator
 
 A Docker image pre-configured with **Syft** and **Trivy** for generating Software Bill of Materials (SBOMs) and vulnerability reports.

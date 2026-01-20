@@ -1,3 +1,36 @@
+### 📝 Included Utility Scripts
+
+**Note:** Utility scripts are only available in version 1.1.0 and later.
+
+This image includes several utility scripts for SBOM and vulnerability workflow automation, available in the container's PATH:
+
+* `generate_sboms.sh` — Generate SBOMs in multiple formats
+* `scan_sbom.sh` — Scan SBOMs for vulnerabilities using Trivy
+* `deduplicate_sbom.sh` — Deduplicate SBOM package references
+* `prepare_output_dirs.sh` — Prepare output directories for reports
+* `verify_tools.sh` — Check Syft and Trivy installation
+* `fail_on_findings.sh` — Fail pipeline on findings (for CI/CD use)
+
+**Important:** All scripts assume the working directory structure (e.g., `out/sbom/`) exists or is created by `prepare_output_dirs.sh`. Always run `prepare_output_dirs.sh` before any other script to avoid errors.
+
+You can call these scripts directly in your pipeline or container shell. Example for Azure DevOps:
+
+```yaml
+- script: |
+    prepare_output_dirs.sh
+    generate_sboms.sh
+    scan_sbom.sh
+  displayName: 'Generate and scan SBOM'
+```
+
+Or run interactively:
+
+```sh
+prepare_output_dirs.sh
+generate_sboms.sh
+```
+
+Each script is self-contained. See the GitHub README or script comments for details and arguments.
 # Docker Hub Full Description - Syft & Trivy SBOM Generator
 
 **Copy everything below and paste into the Docker Hub repository description field:**

@@ -1,14 +1,12 @@
+
 #!/bin/bash
 
 # Docker Registry Publishing Script
 # Publishes syft-trivy-sbom image to Docker registries
 # Supports: Docker Hub, Azure Container Registry (ACR), GitHub Container Registry
 
-set -e
+set -eu
 
-DOCKER_IMAGE="syft-trivy-sbom:latest"
-DOCKER_TAG="latest"
-DOCKER_VERSION="1.0.0"
 
 # Colors
 GREEN='\033[0;32m'
@@ -33,214 +31,179 @@ function print_error() {
   echo -e "${RED}[✗] $1${NC}"
 }
 
-function show_usage() {
-  cat << EOF
-Usage: ./publish.sh [REGISTRY] [OPTIONS]
+# --- HELP MESSAGE ---
+if [[ $# -eq 0 ]]; then
+  print_error "No arguments provided."
+  print_warning "Usage: ./publish.sh REGISTRY [--version VERSION]"
+  print_warning "Try './publish.sh --help' for more information."
+  exit 1
+fi
 
-Registries:
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+  cat << EOF
+Usage: ./publish.sh REGISTRY [--version VERSION]
+
+REGISTRY (required positional argument):
   dockerhub       Docker Hub (default)
   acr             Azure Container Registry
   ghcr            GitHub Container Registry
 
 Options:
-  --username      Docker Hub username
-  --registry      ACR registry URL (e.g., myregistry.azurecr.io)
-  --token         Registry token/password
-  --help          Show this help
+  --version       Image version tag (default: 1.1.0)
+  --help, -h      Show this help
+
+Behavior:
+  - You must be logged in to Docker (via 'docker login') before running this script.
+  - The script will fail with a clear message if you are not logged in.
+  - Only the --version option is supported in addition to the required REGISTRY argument.
 
 Examples:
-  # Docker Hub
-  ./publish.sh dockerhub --username myusername
-
-  # Azure Container Registry
-  ./publish.sh acr --registry myregistry.azurecr.io --username myusername --token mytoken
-
-  # GitHub Container Registry
-  ./publish.sh ghcr --username myusername --token mytoken
-
+  ./publish.sh dockerhub
+  ./publish.sh dockerhub --version 2.0.0
+  ./publish.sh acr --version 2.0.0
+  ./publish.sh ghcr
 EOF
   exit 0
+fi
+
+# Image and versioning
+DOCKER_IMAGE="r3zafa/syft-trivy-sbom:latest"
+DOCKER_TAG="latest"
+
+DOCKER_VERSION=""
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+function print_header() {
+  echo -e "${BLUE}[*] $1${NC}"
 }
 
-function login_dockerhub() {
-  local username=$1
-  if [ -z "$username" ]; then
-    print_error "Docker Hub username required"
-    echo "Usage: ./publish.sh dockerhub --username <your-username>"
-    exit 1
-  fi
-  
-  print_header "Logging in to Docker Hub..."
-  docker login -u "$username"
-  print_success "Logged in to Docker Hub"
+function print_success() {
+  echo -e "${GREEN}[✓] $1${NC}"
 }
 
-function publish_dockerhub() {
-  local username=$1
-  
-  if [ -z "$username" ]; then
-    print_error "Docker Hub username required"
-    exit 1
-  fi
-  
-  local registry="docker.io"
-  local repo="$username/syft-trivy-sbom"
-  
-  print_header "Publishing to Docker Hub: $repo"
-  
-  # Tag image
-  print_header "Tagging image..."
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_TAG"
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
-  docker tag "$DOCKER_IMAGE" "$repo:latest"
-  print_success "Image tagged"
-  
-  # Push images
-  print_header "Pushing to Docker Hub..."
-  docker push "$repo:$DOCKER_TAG"
-  docker push "$repo:$DOCKER_VERSION"
-  docker push "$repo:latest"
-  print_success "Pushed to Docker Hub"
-  
-  echo ""
-  echo "Available at:"
-  echo "  docker pull $repo:$DOCKER_TAG"
-  echo "  docker pull $repo:$DOCKER_VERSION"
-  echo "  docker pull $repo:latest"
+function print_warning() {
+  echo -e "${YELLOW}[!] $1${NC}"
 }
 
-function publish_acr() {
-  local registry=$1
-  local username=$2
-  local token=$3
-  
-  if [ -z "$registry" ] || [ -z "$username" ] || [ -z "$token" ]; then
-    print_error "ACR requires: --registry, --username, --token"
-    exit 1
-  fi
-  
-  print_header "Publishing to Azure Container Registry: $registry"
-  
-  # Login to ACR
-  print_header "Logging in to ACR..."
-  echo "$token" | docker login -u "$username" --password-stdin "$registry"
-  print_success "Logged in to ACR"
-  
-  # Tag image
-  local repo="$registry/syft-trivy-sbom"
-  print_header "Tagging image..."
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_TAG"
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
-  docker tag "$DOCKER_IMAGE" "$repo:latest"
-  print_success "Image tagged"
-  
-  # Push images
-  print_header "Pushing to ACR..."
-  docker push "$repo:$DOCKER_TAG"
-  docker push "$repo:$DOCKER_VERSION"
-  docker push "$repo:latest"
-  print_success "Pushed to ACR"
-  
-  echo ""
-  echo "Available at:"
-  echo "  docker pull $repo:$DOCKER_TAG"
-  echo "  docker pull $repo:$DOCKER_VERSION"
-  echo "  docker pull $repo:latest"
-}
-
-function publish_ghcr() {
-  local username=$1
-  local token=$2
-  
-  if [ -z "$username" ] || [ -z "$token" ]; then
-    print_error "GHCR requires: --username, --token"
-    exit 1
-  fi
-  
-  local registry="ghcr.io"
-  local repo="$registry/$username/syft-trivy-sbom"
-  
-  print_header "Publishing to GitHub Container Registry: $repo"
-  
-  # Login to GHCR
-  print_header "Logging in to GHCR..."
-  echo "$token" | docker login -u "$username" --password-stdin "$registry"
-  print_success "Logged in to GHCR"
-  
-  # Tag image
-  print_header "Tagging image..."
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_TAG"
-  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
-  docker tag "$DOCKER_IMAGE" "$repo:latest"
-  print_success "Image tagged"
-  
-  # Push images
-  print_header "Pushing to GHCR..."
-  docker push "$repo:$DOCKER_TAG"
-  docker push "$repo:$DOCKER_VERSION"
-  docker push "$repo:latest"
-  print_success "Pushed to GHCR"
-  
-  echo ""
-  echo "Available at:"
-  echo "  docker pull $repo:$DOCKER_TAG"
-  echo "  docker pull $repo:$DOCKER_VERSION"
-  echo "  docker pull $repo:latest"
+function print_error() {
+  echo -e "${RED}[✗] $1${NC}"
 }
 
 # Parse arguments
-if [ $# -eq 0 ]; then
-  show_usage
-fi
-
-REGISTRY="${1:-.}"
-USERNAME=""
-REGISTRY_URL=""
-TOKEN=""
-
-shift || true
+REGISTRY=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --username)
-      USERNAME="$2"
+    --version)
+      DOCKER_VERSION="$2"
       shift 2
       ;;
-    --registry)
-      REGISTRY_URL="$2"
-      shift 2
+    --help|-h)
+      # Already handled above
+      shift
       ;;
-    --token)
-      TOKEN="$2"
-      shift 2
-      ;;
-    --help)
-      show_usage
+    dockerhub|acr|ghcr)
+      REGISTRY="$1"
+      shift
       ;;
     *)
-      print_error "Unknown option: $1"
-      show_usage
+      echo "Unknown option or argument: $1"
+      exit 1
       ;;
   esac
 done
 
+if [ -z "$DOCKER_VERSION" ]; then
+  print_error "--version VERSION is required."
+  print_warning "Usage: ./publish.sh REGISTRY [--version VERSION]"
+  print_warning "Try './publish.sh --help' for more information."
+  exit 1
+fi
+
+if [ -z "$REGISTRY" ]; then
+  echo "Error: REGISTRY positional argument is required."
+  echo "Run ./publish.sh --help for usage."
+  exit 1
+fi
+
+# --- Docker login check ---
+print_header "Checking Docker login..."
+if ! docker info 2>&1 | grep -q 'Username:'; then
+  print_error "Not logged in to Docker. Please run 'docker login' first."
+  exit 1
+fi
+print_success "Docker login detected."
+
+function publish_dockerhub() {
+  local repo="r3zafa/syft-trivy-sbom"
+  print_header "Publishing to Docker Hub: $repo"
+  print_header "Tagging image..."
+  docker tag "$DOCKER_IMAGE" "$repo:latest"
+  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
+  print_success "Image tagged"
+  print_header "Pushing to Docker Hub..."
+  docker push "$repo:latest"
+  docker push "$repo:$DOCKER_VERSION"
+  print_success "Pushed to Docker Hub"
+  echo ""
+  echo "Available at:"
+  echo "  docker pull $repo:latest"
+  echo "  docker pull $repo:$DOCKER_VERSION"
+}
+
+function publish_acr() {
+  local repo="r3zafa/syft-trivy-sbom"
+  print_header "Publishing to Azure Container Registry: $repo"
+  print_header "Tagging image..."
+  docker tag "$DOCKER_IMAGE" "$repo:latest"
+  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
+  print_success "Image tagged"
+  print_header "Pushing to ACR..."
+  docker push "$repo:latest"
+  docker push "$repo:$DOCKER_VERSION"
+  print_success "Pushed to ACR"
+  echo ""
+  echo "Available at:"
+  echo "  docker pull $repo:latest"
+  echo "  docker pull $repo:$DOCKER_VERSION"
+}
+
+function publish_ghcr() {
+  local repo="r3zafa/syft-trivy-sbom"
+  print_header "Publishing to GitHub Container Registry: $repo"
+  print_header "Tagging image..."
+  docker tag "$DOCKER_IMAGE" "$repo:latest"
+  docker tag "$DOCKER_IMAGE" "$repo:$DOCKER_VERSION"
+  print_success "Image tagged"
+  print_header "Pushing to GHCR..."
+  docker push "$repo:latest"
+  docker push "$repo:$DOCKER_VERSION"
+  print_success "Pushed to GHCR"
+  echo ""
+  echo "Available at:"
+  echo "  docker pull $repo:latest"
+  echo "  docker pull $repo:$DOCKER_VERSION"
+}
+
 case "$REGISTRY" in
   dockerhub)
-    login_dockerhub "$USERNAME"
-    publish_dockerhub "$USERNAME"
+    publish_dockerhub
     ;;
   acr)
-    publish_acr "$REGISTRY_URL" "$USERNAME" "$TOKEN"
+    publish_acr
     ;;
   ghcr)
-    publish_ghcr "$USERNAME" "$TOKEN"
-    ;;
-  help)
-    show_usage
+    publish_ghcr
     ;;
   *)
     print_error "Unknown registry: $REGISTRY"
-    show_usage
+    exit 1
     ;;
 esac
 

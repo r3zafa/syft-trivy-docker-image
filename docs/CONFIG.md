@@ -261,8 +261,9 @@ cd /your/docker/compose/location
 
 ```
 syft-trivy-docker-image/
-├── Dockerfile                  # Container definition
-├── docker-compose.yml          # Configurable compose file
+├── docker/
+│   ├── Dockerfile              # Container definition
+│   └── docker-compose.yml      # Configurable compose file
 ├── build.sh                    # Build script
 ├── generate-sbom.sh            # Standalone SBOM generator
 ├── test.sh                     # Docker-based test script

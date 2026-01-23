@@ -20,6 +20,6 @@ stages:
       - template: jobs/docker-build.yml@templates
         parameters:
           repository: syft-trivy-sbom
-          dockerfile: Dockerfile
+          dockerfile: docker/Dockerfile
           pool:
             name: general

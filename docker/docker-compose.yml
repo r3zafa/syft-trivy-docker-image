@@ -4,7 +4,7 @@ services:
   sbom-generator:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: syft-trivy-sbom-${PROJECT_NAME:-default}
     volumes:
       - ${PROJECT_PATH:-./}:/project

@@ -253,7 +253,7 @@ export PROJECT_PATH=$(cd /path/to/project && pwd)
 ./generate-sbom.sh -p "$PROJECT_PATH"
 
 # Or relative to docker-compose location
-cd /your/docker/compose/location
+cd /your/compose/location
 ./generate-sbom.sh -p ../my-project
 ```
 
@@ -261,9 +261,8 @@ cd /your/docker/compose/location
 
 ```
 syft-trivy-docker-image/
-├── docker/
-│   ├── Dockerfile              # Container definition
-│   └── docker-compose.yml      # Configurable compose file
+├── Dockerfile              # Container definition
+├── docker-compose.yml      # Configurable compose file
 ├── build.sh                    # Build script
 ├── generate-sbom.sh            # Standalone SBOM generator
 ├── test.sh                     # Docker-based test script

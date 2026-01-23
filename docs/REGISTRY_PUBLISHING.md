@@ -274,7 +274,7 @@ steps:
   displayName: 'Build Docker Image'
   inputs:
     command: 'build'
-    Dockerfile: 'docker/Dockerfile'
+    Dockerfile: 'Dockerfile'
     tags: |
       $(IMAGE_TAG)
       latest

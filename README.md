@@ -382,9 +382,8 @@ docker-compose exec sbom-generator /bin/bash
 
 ```
 .
-├── docker/
-│   ├── Dockerfile             # Multi-stage Dockerfile with Syft & Trivy
-│   └── docker-compose.yml     # Docker Compose configuration
+├── Dockerfile             # Multi-stage Dockerfile with Syft & Trivy
+├── docker-compose.yml     # Docker Compose configuration
 ├── build.sh                   # Build script
 ├── generate-sbom.sh          # SBOM generation script
 ├── README.md                 # This file

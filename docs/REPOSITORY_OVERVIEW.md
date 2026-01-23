@@ -14,9 +14,8 @@ This project provides an easy-to-use containerized solution for supply chain sec
 
 ```
 syft-trivy-docker-image/
-├── docker/
-│   ├── Dockerfile                      # Container image definition
-│   └── docker-compose.yml              # Docker Compose configuration
+├── Dockerfile                      # Container image definition
+├── docker-compose.yml              # Docker Compose configuration
 ├── run.sh                             # Local build & run wrapper
 ├── publish.sh                         # Registry publishing automation
 ├── build.sh                           # Build script

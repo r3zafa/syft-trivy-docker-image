@@ -1,0 +1,26 @@
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: templates
+
+trigger:
+  - master
+
+variables:
+  dockerRegistryServiceConnection: "aerprogressbybavaria.azurecr.io"
+
+pool:
+  name: general
+
+stages:
+  - stage: Build
+    displayName: "Build + Push to docker Registry (ACR)"
+    jobs:
+      - template: jobs/docker-build.yml@templates
+        parameters:
+          repository: syft-trivy-sbom
+          dockerfile: Dockerfile
+          pool:
+            name: general
+            

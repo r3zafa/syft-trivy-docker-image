@@ -45,4 +45,4 @@ if [ "$#" -gt 0 ]; then
   esac
 fi
 
-mkdir -p out/sbom out/sbom/sevirity-scan
+mkdir -p out/sbom out/sbom/severity-scan

@@ -5,3 +5,6 @@ sample-images/
 __pycache__/
 .venv/
 venv/
+
+# TEMP: Ignore Azure DevOps pipeline file for GitHub push
+azure-pipelines.yml

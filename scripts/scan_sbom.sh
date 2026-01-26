@@ -73,5 +73,9 @@ trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --exit-
 if [ $? -ne 0 ]; then
   echo "##vso[task.setvariable variable=hasFindings;isOutput=true]true"
 else
-  echo "##vso[task.setvariable variable=hasFindings;isOutput=true]false"
+	echo "##vso[task.setvariable variable=hasFindings;isOutput=true]false"
 fi
+
+# Ensure files are writable and owned by the current user (not root)
+chmod -R u+rwX out/sbom
+chown -R "$(id -u):$(id -g)" out/sbom || true

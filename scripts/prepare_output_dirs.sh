@@ -43,4 +43,4 @@ if [ "$#" -gt 0 ]; then
   esac
 fi
 
-mkdir -p out/sbom out/sbom/severity-scan
+mkdir -p /workspace/sbom /workspace/sbom/severity-scan

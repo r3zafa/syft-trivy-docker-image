@@ -62,11 +62,11 @@ if [ -z "$failOnSeverity" ]; then
   exit 1
 fi
 
-SBOM=out/sbom/spdx.json
-if [ ! -f "$SBOM" ]; then SBOM=out/sbom/cyclonedx.json; fi
-mkdir -p out/sbom/sevirity-scan
-trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --format table "$SBOM" | tee out/sbom/sevirity-scan/trivy-sbom.txt || true
-trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --format sarif --output out/sbom/sevirity-scan/trivy-sbom.sarif "$SBOM" || true
+SBOM=/workspace/sbom/spdx.json
+if [ ! -f "$SBOM" ]; then SBOM=/workspace/sbom/cyclonedx.json; fi
+mkdir -p /workspace/sbom/sevirity-scan
+trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --format table "$SBOM" | tee /workspace/sbom/sevirity-scan/trivy-sbom.txt || true
+trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --format sarif --output /workspace/sbom/sevirity-scan/trivy-sbom.sarif "$SBOM" || true
 trivy sbom --ignore-unfixed --timeout 10m --severity "${failOnSeverity}" --exit-code 1 "$SBOM"
 if [ $? -ne 0 ]; then
   echo "##vso[task.setvariable variable=hasFindings;isOutput=true]true"
@@ -75,5 +75,5 @@ else
 fi
 
 # Ensure files are writable and owned by the current user (not root)
-chmod -R u+rwX out/sbom
-chown -R "$(id -u):$(id -g)" out/sbom || true
+chmod -R u+rwX /workspace/sbom
+chown -R "$(id -u):$(id -g)" /workspace/sbom || true

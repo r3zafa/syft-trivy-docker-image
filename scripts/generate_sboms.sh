@@ -84,10 +84,10 @@ if [ -z "$workdir" ]; then
 	exit 1
 fi
 
-syft "dir:${workdir}" -o spdx-json > out/sbom/spdx.json
-syft "dir:${workdir}" -o cyclonedx-json > out/sbom/cyclonedx.json
-echo "Package=${packageName}" > out/sbom/metadata.txt
-echo "Version=${packageVersion}" >> out/sbom/metadata.txt
-echo "Supplier=${supplier}" >> out/sbom/metadata.txt
-echo "GeneratedAt=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> out/sbom/metadata.txt
-cd out/sbom && for f in *.json; do sha256sum "$f" > "$f.sha256"; done
+syft "dir:${workdir}" -o spdx-json > /workspace/sbom/spdx.json
+syft "dir:${workdir}" -o cyclonedx-json > /workspace/sbom/cyclonedx.json
+echo "Package=${packageName}" > /workspace/sbom/metadata.txt
+echo "Version=${packageVersion}" >> /workspace/sbom/metadata.txt
+echo "Supplier=${supplier}" >> /workspace/sbom/metadata.txt
+echo "GeneratedAt=$(date -u +%Y-%m-%dT%H-%M-%SZ)" >> /workspace/sbom/metadata.txt
+cd /workspace/sbom && for f in *.json; do sha256sum "$f" > "$f.sha256"; done

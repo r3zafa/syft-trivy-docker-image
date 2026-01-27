@@ -44,7 +44,7 @@ if [ "$#" -gt 0 ]; then
   esac
 fi
 
-SBOM=out/sbom/spdx.json
+SBOM=/workspace/sbom/spdx.json
 if [ -f "$SBOM" ]; then
   jq '
     .packages |= map(
